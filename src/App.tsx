@@ -54,6 +54,50 @@ function App() {
   const [mapCenter, setMapCenter] = useState<[number, number]>([39.8283, -98.5795]);
   const [mapZoom, setMapZoom] = useState(4);
 
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) return;
+
+    // First check existing markers
+    const foundMarker = markers.find(marker => 
+      marker.title.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    
+    if (foundMarker) {
+      setMapCenter(foundMarker.position);
+      setMapZoom(10);
+      return;
+    }
+
+    // If not found in markers, use geocoding API
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`
+      );
+      const data = await response.json();
+      
+      if (data && data.length > 0) {
+        const lat = parseFloat(data[0].lat);
+        const lng = parseFloat(data[0].lon);
+        setMapCenter([lat, lng]);
+        setMapZoom(12);
+        
+        // Optionally add a marker for the searched location
+        const newMarker: MarkerData = {
+          id: Date.now(),
+          position: [lat, lng],
+          title: data[0].display_name.split(',')[0] || searchQuery,
+          description: `Found location: ${data[0].display_name}`
+        };
+        setMarkers([...markers, newMarker]);
+      } else {
+        alert('Location not found. Please try a different search term.');
+      }
+    } catch (error) {
+      console.error('Search error:', error);
+      alert('Search failed. Please check your internet connection and try again.');
+    }
+  };
+
   const handleMapClick = (lat: number, lng: number) => {
     const newMarker: MarkerData = {
       id: Date.now(),
@@ -62,17 +106,6 @@ function App() {
       description: `Custom marker at ${lat.toFixed(4)}, ${lng.toFixed(4)}`
     };
     setMarkers([...markers, newMarker]);
-  };
-
-  const handleSearch = () => {
-    const foundMarker = markers.find(marker => 
-      marker.title.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    
-    if (foundMarker) {
-      setMapCenter(foundMarker.position);
-      setMapZoom(10);
-    }
   };
 
   const handleDeleteMarker = (id: number) => {
