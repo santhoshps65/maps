@@ -41,7 +41,9 @@ function App() {
               Interactive Map
             </h1>
           </div>
-          <LocationSearch onLocationSelect={handleLocationSelect} />
+          <div className="max-w-xs">
+            <LocationSearch onLocationSelect={handleLocationSelect} />
+          </div>
         </div>
       </header>
 
