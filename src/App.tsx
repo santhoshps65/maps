@@ -34,10 +34,10 @@ function App() {
       <header className="bg-white/90 backdrop-blur-sm shadow-lg border-b border-gray-200 p-4 transition-all duration-300">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-600 rounded-lg shadow-md">
-              <MapPin className="w-6 h-6 text-white" />
+            <div className="p-3 bg-blue-600 rounded-lg shadow-md">
+              <MapPin className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
               Interactive Map
             </h1>
           </div>

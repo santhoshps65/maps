@@ -91,17 +91,17 @@ export const LocationSearch: React.FC<LocationSearchProps> = ({ onLocationSelect
     <div className="relative flex-1 max-w-md">
       <form onSubmit={handleSubmit} className="relative">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-6 h-6" />
           <input
             type="text"
             value={query}
             onChange={handleInputChange}
             onFocus={() => setShowResults(results.length > 0)}
             placeholder="Search for a location..."
-            className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200 bg-white/90 backdrop-blur-sm text-gray-700 placeholder-gray-500"
+            className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200 bg-white/90 backdrop-blur-sm text-lg text-gray-700 placeholder-gray-500"
           />
           {isLoading && (
-            <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 animate-spin" />
+            <Loader2 className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-6 h-6 animate-spin" />
           )}
         </div>
       </form>
@@ -113,10 +113,10 @@ export const LocationSearch: React.FC<LocationSearchProps> = ({ onLocationSelect
             <button
               key={result.place_id}
               onClick={() => handleResultClick(result)}
-              className="w-full px-4 py-3 text-left hover:bg-blue-50 active:bg-blue-100 transition-colors duration-150 border-b border-gray-100 last:border-b-0 flex items-start space-x-3 group"
+              className="w-full px-5 py-4 text-left hover:bg-blue-50 active:bg-blue-100 transition-colors duration-150 border-b border-gray-100 last:border-b-0 flex items-start space-x-4 group"
             >
-              <MapPin className="w-4 h-4 text-blue-600 group-hover:text-blue-700 mt-0.5 flex-shrink-0" />
-              <span className="text-sm text-gray-700 group-hover:text-gray-900 leading-relaxed">
+              <MapPin className="w-6 h-6 text-blue-600 group-hover:text-blue-700 mt-0.5 flex-shrink-0" />
+              <span className="text-base text-gray-700 group-hover:text-gray-900 leading-relaxed">
                 {result.display_name}
               </span>
             </button>
@@ -126,10 +126,10 @@ export const LocationSearch: React.FC<LocationSearchProps> = ({ onLocationSelect
       
       {/* No results message */}
       {showResults && results.length === 0 && !isLoading && query.trim() && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white/98 backdrop-blur-sm border border-gray-200 rounded-lg shadow-xl z-50 px-4 py-6 text-center">
-          <MapPin className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-          <p className="text-sm text-gray-500">No locations found for "{query}"</p>
-          <p className="text-xs text-gray-400 mt-1">Try searching for a city, address, or landmark</p>
+        <div className="absolute top-full left-0 right-0 mt-1 bg-white/98 backdrop-blur-sm border border-gray-200 rounded-lg shadow-xl z-50 px-6 py-8 text-center">
+          <MapPin className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+          <p className="text-base text-gray-500">No locations found for "{query}"</p>
+          <p className="text-sm text-gray-400 mt-2">Try searching for a city, address, or landmark</p>
         </div>
       )}
 
