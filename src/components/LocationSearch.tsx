@@ -88,7 +88,7 @@ export const LocationSearch: React.FC<LocationSearchProps> = ({ onLocationSelect
   };
 
   return (
-    <div className="relative flex-1 max-w-md">
+    <div className="relative flex-1 max-w-lg">
       <form onSubmit={handleSubmit} className="relative">
         <div className="relative">
           <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-6 h-6" />
@@ -98,7 +98,7 @@ export const LocationSearch: React.FC<LocationSearchProps> = ({ onLocationSelect
             onChange={handleInputChange}
             onFocus={() => setShowResults(results.length > 0)}
             placeholder="Search for a location..."
-            className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200 bg-white/90 backdrop-blur-sm text-lg text-gray-700 placeholder-gray-500"
+            className="w-full pl-12 pr-12 py-4 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 bg-white text-lg text-gray-800 placeholder-gray-500 shadow-sm"
           />
           {isLoading && (
             <Loader2 className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-6 h-6 animate-spin" />
@@ -108,15 +108,15 @@ export const LocationSearch: React.FC<LocationSearchProps> = ({ onLocationSelect
 
       {/* Search Results Dropdown */}
       {showResults && results.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white/98 backdrop-blur-sm border border-gray-200 rounded-lg shadow-xl z-50 max-h-80 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-2xl z-[9999] max-h-96 overflow-y-auto">
           {results.map((result) => (
             <button
               key={result.place_id}
               onClick={() => handleResultClick(result)}
-              className="w-full px-5 py-4 text-left hover:bg-blue-50 active:bg-blue-100 transition-colors duration-150 border-b border-gray-100 last:border-b-0 flex items-start space-x-4 group"
+              className="w-full px-6 py-5 text-left hover:bg-blue-50 active:bg-blue-100 transition-colors duration-150 border-b border-gray-200 last:border-b-0 flex items-start space-x-4 group first:rounded-t-lg last:rounded-b-lg"
             >
               <MapPin className="w-6 h-6 text-blue-600 group-hover:text-blue-700 mt-0.5 flex-shrink-0" />
-              <span className="text-base text-gray-700 group-hover:text-gray-900 leading-relaxed">
+              <span className="text-lg text-gray-800 group-hover:text-gray-900 leading-relaxed font-medium">
                 {result.display_name}
               </span>
             </button>
@@ -126,17 +126,17 @@ export const LocationSearch: React.FC<LocationSearchProps> = ({ onLocationSelect
       
       {/* No results message */}
       {showResults && results.length === 0 && !isLoading && query.trim() && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white/98 backdrop-blur-sm border border-gray-200 rounded-lg shadow-xl z-50 px-6 py-8 text-center">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-2xl z-[9999] px-8 py-10 text-center">
           <MapPin className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-          <p className="text-base text-gray-500">No locations found for "{query}"</p>
-          <p className="text-sm text-gray-400 mt-2">Try searching for a city, address, or landmark</p>
+          <p className="text-lg text-gray-600 font-medium">No locations found for "{query}"</p>
+          <p className="text-base text-gray-500 mt-3">Try searching for a city, address, or landmark</p>
         </div>
       )}
 
       {/* Click outside to close */}
       {showResults && (
         <div
-          className="fixed inset-0 z-40"
+          className="fixed inset-0 z-[9998]"
           onClick={() => setShowResults(false)}
         />
       )}
