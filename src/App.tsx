@@ -48,7 +48,7 @@ function App() {
       </header>
 
       {/* Main Content */}
-      <div className="flex-1">
+      <div className="flex-1 mt-4">
         {/* Map */}
         <div className="h-full relative">
           <MapContainer
