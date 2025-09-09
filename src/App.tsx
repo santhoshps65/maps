@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, LayersControl, useMap } from 'react-leaflet';
 import { MapPin, Layers } from 'lucide-react';
 import { LocationSearch } from './components/LocationSearch';
+import { PlaceDetails } from './components/PlaceDetails';
 import { locationMarkers, createPulsingMarker } from './components/CustomMarkers';
 import { MapControls } from './components/MapControls';
 import 'leaflet/dist/leaflet.css';
@@ -24,12 +25,19 @@ function App() {
     lat: number;
     lng: number;
     name: string;
+    display_name?: string;
   } | null>(null);
+  const [showPlaceDetails, setShowPlaceDetails] = useState(false);
 
   const handleLocationSelect = (lat: number, lng: number, name: string) => {
     setMapCenter([lat, lng]);
     setMapZoom(13);
     setSelectedLocation({ lat, lng, name });
+  };
+
+  const handleMarkerClick = (location: { lat: number; lng: number; name: string; display_name?: string }) => {
+    setSelectedLocation(location);
+    setShowPlaceDetails(true);
   };
 
   // Map control handlers
@@ -153,6 +161,9 @@ function App() {
               <Marker 
                 position={[selectedLocation.lat, selectedLocation.lng]}
                 icon={selectedLocation.name.includes('Current Location') ? createPulsingMarker() : locationMarkers.search}
+                eventHandlers={{
+                  click: () => handleMarkerClick(selectedLocation)
+                }}
               >
                 <Popup>
                   <div className="text-sm p-2">
@@ -163,6 +174,12 @@ function App() {
                     <div className="text-xs text-gray-600">
                       📍 {selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}
                     </div>
+                    <button
+                      onClick={() => handleMarkerClick(selectedLocation)}
+                      className="mt-2 px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors"
+                    >
+                      View Details
+                    </button>
                   </div>
                 </Popup>
               </Marker>
@@ -178,6 +195,14 @@ function App() {
             onRecenter={handleRecenter}
           />
         </div>
+
+        {/* Place Details Modal */}
+        {showPlaceDetails && (
+          <PlaceDetails
+            place={selectedLocation}
+            onClose={() => setShowPlaceDetails(false)}
+          />
+        )}
       </div>
     </div>
   );
