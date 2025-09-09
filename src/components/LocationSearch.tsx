@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, MapPin, Loader2 } from 'lucide-react';
+import { Search, MapPin, Loader2, MapPinned } from 'lucide-react';
 
 // Add type declaration for window
 declare global {
@@ -87,6 +87,28 @@ export const LocationSearch: React.FC<LocationSearchProps> = ({ onLocationSelect
     }
   };
 
+  const handleCurrentLocation = () => {
+    if (navigator.geolocation) {
+      setIsLoading(true);
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          onLocationSelect(latitude, longitude, 'Current Location');
+          setQuery('Current Location');
+          setShowResults(false);
+          setIsLoading(false);
+        },
+        (error) => {
+          console.error('Error getting current location:', error);
+          setIsLoading(false);
+          alert('Unable to get your current location. Please check your browser permissions.');
+        }
+      );
+    } else {
+      alert('Geolocation is not supported by this browser.');
+    }
+  };
+
   return (
     <div className="relative w-full">
       <form onSubmit={handleSubmit} className="relative">
@@ -98,8 +120,16 @@ export const LocationSearch: React.FC<LocationSearchProps> = ({ onLocationSelect
             onChange={handleInputChange}
             onFocus={() => setShowResults(results.length > 0)}
             placeholder="Search for a location..."
-            className="w-full pl-10 pr-10 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 bg-white text-sm text-gray-800 placeholder-gray-500 shadow-sm"
+            className="w-full pl-10 pr-16 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 bg-white text-sm text-gray-800 placeholder-gray-500 shadow-sm"
           />
+          <button
+            type="button"
+            onClick={handleCurrentLocation}
+            className="absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-blue-600 transition-colors duration-200 p-1 rounded-full hover:bg-blue-50"
+            title="Use current location"
+          >
+            <MapPinned className="w-5 h-5" />
+          </button>
           {isLoading && (
             <Loader2 className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-6 h-6 animate-spin" />
           )}
