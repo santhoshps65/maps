@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, LayersControl } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, LayersControl, useMap } from 'react-leaflet';
 import { MapPin, Layers } from 'lucide-react';
 import { LocationSearch } from './components/LocationSearch';
+import { locationMarkers, createPulsingMarker } from './components/CustomMarkers';
+import { MapControls } from './components/MapControls';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -16,6 +18,7 @@ L.Icon.Default.mergeOptions({
 function App() {
   const [mapCenter, setMapCenter] = useState<[number, number]>([39.8283, -98.5795]);
   const [mapZoom, setMapZoom] = useState(4);
+  const [mapRef, setMapRef] = useState<L.Map | null>(null);
   const [showLayerControl, setShowLayerControl] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<{
     lat: number;
@@ -27,6 +30,48 @@ function App() {
     setMapCenter([lat, lng]);
     setMapZoom(13);
     setSelectedLocation({ lat, lng, name });
+  };
+
+  // Map control handlers
+  const handleZoomIn = () => {
+    if (mapRef) {
+      mapRef.zoomIn();
+    }
+  };
+
+  const handleZoomOut = () => {
+    if (mapRef) {
+      mapRef.zoomOut();
+    }
+  };
+
+  const handleReset = () => {
+    setMapCenter([39.8283, -98.5795]);
+    setMapZoom(4);
+    setSelectedLocation(null);
+  };
+
+  const handleFullscreen = () => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else {
+      document.documentElement.requestFullscreen();
+    }
+  };
+
+  const handleRecenter = () => {
+    if (selectedLocation && mapRef) {
+      mapRef.setView([selectedLocation.lat, selectedLocation.lng], 15);
+    }
+  };
+
+  // Component to handle map reference
+  const MapHandler = () => {
+    const map = useMap();
+    React.useEffect(() => {
+      setMapRef(map);
+    }, [map]);
+    return null;
   };
 
   return (
@@ -58,13 +103,15 @@ function App() {
       {/* Main Content */}
       <div className="flex-1 mt-4">
         {/* Map */}
-        <div className="h-full relative">
+        <div className="h-full relative overflow-hidden rounded-lg mx-4 shadow-2xl">
           <MapContainer
             center={mapCenter}
             zoom={mapZoom}
-            className="h-full w-full shadow-inner"
+            className="h-full w-full"
             key={`${mapCenter[0]}-${mapCenter[1]}-${mapZoom}`}
+            zoomControl={false}
           >
+            <MapHandler />
             <LayersControl position="topright" collapsed={!showLayerControl}>
               <LayersControl.BaseLayer checked name="OpenStreetMap">
                 <TileLayer
@@ -103,15 +150,33 @@ function App() {
             </LayersControl>
             
             {selectedLocation && (
-              <Marker position={[selectedLocation.lat, selectedLocation.lng]}>
+              <Marker 
+                position={[selectedLocation.lat, selectedLocation.lng]}
+                icon={selectedLocation.name.includes('Current Location') ? createPulsingMarker() : locationMarkers.search}
+              >
                 <Popup>
-                  <div className="text-sm">
-                    <strong>{selectedLocation.name}</strong>
+                  <div className="text-sm p-2">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <span className="text-lg">📍</span>
+                      <strong className="text-gray-800">{selectedLocation.name}</strong>
+                    </div>
+                    <div className="text-xs text-gray-600">
+                      📍 {selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}
+                    </div>
                   </div>
                 </Popup>
               </Marker>
             )}
           </MapContainer>
+          
+          {/* Custom Map Controls */}
+          <MapControls
+            onZoomIn={handleZoomIn}
+            onZoomOut={handleZoomOut}
+            onReset={handleReset}
+            onFullscreen={handleFullscreen}
+            onRecenter={handleRecenter}
+          />
         </div>
       </div>
     </div>
