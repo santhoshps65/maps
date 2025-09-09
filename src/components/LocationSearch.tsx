@@ -91,17 +91,61 @@ export const LocationSearch: React.FC<LocationSearchProps> = ({ onLocationSelect
     if (navigator.geolocation) {
       setIsLoading(true);
       navigator.geolocation.getCurrentPosition(
-        (position) => {
+        async (position) => {
           const { latitude, longitude } = position.coords;
-          onLocationSelect(latitude, longitude, 'Current Location');
-          setQuery('Current Location');
+          
+          try {
+            // Reverse geocoding to get the actual address
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1&accept-language=en`
+            );
+            
+            if (response.ok) {
+              const data = await response.json();
+              const locationName = data.display_name || `Current Location (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`;
+              onLocationSelect(latitude, longitude, locationName);
+              setQuery(locationName);
+            } else {
+              // Fallback if reverse geocoding fails
+              const fallbackName = `Current Location (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`;
+              onLocationSelect(latitude, longitude, fallbackName);
+              setQuery(fallbackName);
+            }
+          } catch (error) {
+            console.error('Reverse geocoding error:', error);
+            // Fallback if reverse geocoding fails
+            const fallbackName = `Current Location (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`;
+            onLocationSelect(latitude, longitude, fallbackName);
+            setQuery(fallbackName);
+          }
+          
           setShowResults(false);
           setIsLoading(false);
         },
         (error) => {
           console.error('Error getting current location:', error);
           setIsLoading(false);
-          alert('Unable to get your current location. Please check your browser permissions.');
+          let errorMessage = 'Unable to get your current location. ';
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage += 'Please allow location access in your browser settings.';
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage += 'Location information is unavailable.';
+              break;
+            case error.TIMEOUT:
+              errorMessage += 'Location request timed out.';
+              break;
+            default:
+              errorMessage += 'An unknown error occurred.';
+              break;
+          }
+          alert(errorMessage);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 60000
         }
       );
     } else {
