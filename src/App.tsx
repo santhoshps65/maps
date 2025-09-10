@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, LayersControl, useMap } from 'react-leaflet';
-import { MapPin, Layers } from 'lucide-react';
+import { MapPin, Layers, Cloud } from 'lucide-react';
 import { LocationSearch } from './components/LocationSearch';
-import { PlaceDetails } from './components/PlaceDetails';
+import { WeatherPanel } from './components/WeatherPanel';
+import { WeatherStationMap } from './components/WeatherStationMap';
 import { locationMarkers, createPulsingMarker } from './components/CustomMarkers';
 import { MapControls } from './components/MapControls';
+import { WeatherStation } from './types/weather';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -27,17 +29,76 @@ function App() {
     name: string;
     display_name?: string;
   } | null>(null);
-  const [showPlaceDetails, setShowPlaceDetails] = useState(false);
+  const [showWeatherPanel, setShowWeatherPanel] = useState(false);
+  const [weatherStations] = useState<WeatherStation[]>([
+    {
+      id: 'ws_001',
+      name: 'Central Weather Station',
+      coordinates: { lat: 40.7128, lng: -74.0060 },
+      status: 'active',
+      lastUpdate: new Date().toISOString(),
+      sensors: {
+        temperature: true,
+        humidity: true,
+        pressure: true,
+        wind: true,
+        precipitation: true,
+        seismic: false
+      }
+    },
+    {
+      id: 'ws_002',
+      name: 'Mountain Observatory',
+      coordinates: { lat: 39.7392, lng: -104.9903 },
+      status: 'active',
+      lastUpdate: new Date().toISOString(),
+      sensors: {
+        temperature: true,
+        humidity: true,
+        pressure: true,
+        wind: true,
+        precipitation: true,
+        seismic: true
+      }
+    },
+    {
+      id: 'ws_003',
+      name: 'Coastal Monitor',
+      coordinates: { lat: 34.0522, lng: -118.2437 },
+      status: 'maintenance',
+      lastUpdate: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+      sensors: {
+        temperature: true,
+        humidity: true,
+        pressure: false,
+        wind: true,
+        precipitation: true,
+        seismic: false
+      }
+    }
+  ]);
 
   const handleLocationSelect = (lat: number, lng: number, name: string) => {
     setMapCenter([lat, lng]);
     setMapZoom(13);
     setSelectedLocation({ lat, lng, name });
+    setShowWeatherPanel(true);
   };
 
   const handleMarkerClick = (location: { lat: number; lng: number; name: string; display_name?: string }) => {
     setSelectedLocation(location);
-    setShowPlaceDetails(true);
+    setShowWeatherPanel(true);
+  };
+
+  const handleStationClick = (station: WeatherStation) => {
+    setSelectedLocation({
+      lat: station.coordinates.lat,
+      lng: station.coordinates.lng,
+      name: station.name
+    });
+    setMapCenter([station.coordinates.lat, station.coordinates.lng]);
+    setMapZoom(12);
+    setShowWeatherPanel(true);
   };
 
   // Map control handlers
@@ -83,16 +144,16 @@ function App() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="h-screen flex bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Header */}
-      <header className="bg-white/90 backdrop-blur-sm shadow-lg border-b border-gray-200 p-4 transition-all duration-300">
+      <header className="absolute top-0 left-0 right-0 bg-white/90 backdrop-blur-sm shadow-lg border-b border-gray-200 p-4 transition-all duration-300 z-[1000]">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center space-x-3">
             <div className="p-3 bg-blue-600 rounded-lg shadow-md">
-              <MapPin className="w-8 h-8 text-white" />
+              <Cloud className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              MapNest
+              WeatherGuard
             </h1>
           </div>
           <div className="max-w-xs">
@@ -109,9 +170,16 @@ function App() {
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 mt-4">
+      <div className="flex flex-1 pt-20">
+        {/* Weather Panel Sidebar */}
+        <div className={`transition-all duration-300 ${showWeatherPanel ? 'w-96' : 'w-0'} overflow-hidden`}>
+          <div className="h-full overflow-y-auto bg-gray-50/50">
+            <WeatherPanel location={selectedLocation} />
+          </div>
+        </div>
+        
         {/* Map */}
-        <div className="h-full relative overflow-hidden rounded-lg mx-4 shadow-2xl">
+        <div className="flex-1 h-full relative overflow-hidden">
           <MapContainer
             center={mapCenter}
             zoom={mapZoom}
@@ -157,6 +225,12 @@ function App() {
               </LayersControl.BaseLayer>
             </LayersControl>
             
+            {/* Weather Stations */}
+            <WeatherStationMap 
+              stations={weatherStations}
+              onStationClick={handleStationClick}
+            />
+            
             {selectedLocation && (
               <Marker 
                 position={[selectedLocation.lat, selectedLocation.lng]}
@@ -176,9 +250,9 @@ function App() {
                     </div>
                     <button
                       onClick={() => handleMarkerClick(selectedLocation)}
-                      className="mt-2 px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors"
+                      className="mt-2 px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors w-full"
                     >
-                      View Details
+                      View Weather & Alerts
                     </button>
                   </div>
                 </Popup>
@@ -195,14 +269,6 @@ function App() {
             onRecenter={handleRecenter}
           />
         </div>
-
-        {/* Place Details Modal */}
-        {showPlaceDetails && (
-          <PlaceDetails
-            place={selectedLocation}
-            onClose={() => setShowPlaceDetails(false)}
-          />
-        )}
       </div>
     </div>
   );
