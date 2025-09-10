@@ -19,8 +19,8 @@ L.Icon.Default.mergeOptions({
 });
 
 function App() {
-  const [mapCenter, setMapCenter] = useState<[number, number]>([39.8283, -98.5795]);
-  const [mapZoom, setMapZoom] = useState(4);
+  const [mapCenter, setMapCenter] = useState<[number, number]>([20.5937, 78.9629]); // Center of India
+  const [mapZoom, setMapZoom] = useState(5);
   const [mapRef, setMapRef] = useState<L.Map | null>(null);
   const [showLayerControl, setShowLayerControl] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<{
@@ -33,8 +33,8 @@ function App() {
   const [weatherStations] = useState<WeatherStation[]>([
     {
       id: 'ws_001',
-      name: 'Central Weather Station',
-      coordinates: { lat: 40.7128, lng: -74.0060 },
+      name: 'Mumbai Weather Station',
+      coordinates: { lat: 19.0760, lng: 72.8777 },
       status: 'active',
       lastUpdate: new Date().toISOString(),
       sensors: {
@@ -43,13 +43,13 @@ function App() {
         pressure: true,
         wind: true,
         precipitation: true,
-        seismic: false
+        seismic: true
       }
     },
     {
       id: 'ws_002',
-      name: 'Mountain Observatory',
-      coordinates: { lat: 39.7392, lng: -104.9903 },
+      name: 'Delhi Weather Observatory',
+      coordinates: { lat: 28.7041, lng: 77.1025 },
       status: 'active',
       lastUpdate: new Date().toISOString(),
       sensors: {
@@ -63,14 +63,59 @@ function App() {
     },
     {
       id: 'ws_003',
-      name: 'Coastal Monitor',
-      coordinates: { lat: 34.0522, lng: -118.2437 },
+      name: 'Chennai Coastal Monitor',
+      coordinates: { lat: 13.0827, lng: 80.2707 },
       status: 'maintenance',
       lastUpdate: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
       sensors: {
         temperature: true,
         humidity: true,
         pressure: false,
+        wind: true,
+        precipitation: true,
+        seismic: false
+      }
+    },
+    {
+      id: 'ws_004',
+      name: 'Shimla Hill Station Monitor',
+      coordinates: { lat: 31.1048, lng: 77.1734 },
+      status: 'active',
+      lastUpdate: new Date().toISOString(),
+      sensors: {
+        temperature: true,
+        humidity: true,
+        pressure: true,
+        wind: true,
+        precipitation: true,
+        seismic: true
+      }
+    },
+    {
+      id: 'ws_005',
+      name: 'Kolkata Eastern Monitor',
+      coordinates: { lat: 22.5726, lng: 88.3639 },
+      status: 'active',
+      lastUpdate: new Date().toISOString(),
+      sensors: {
+        temperature: true,
+        humidity: true,
+        pressure: true,
+        wind: true,
+        precipitation: true,
+        seismic: false
+      }
+    },
+    {
+      id: 'ws_006',
+      name: 'Bangalore Tech Hub Station',
+      coordinates: { lat: 12.9716, lng: 77.5946 },
+      status: 'active',
+      lastUpdate: new Date().toISOString(),
+      sensors: {
+        temperature: true,
+        humidity: true,
+        pressure: true,
         wind: true,
         precipitation: true,
         seismic: false
@@ -115,8 +160,8 @@ function App() {
   };
 
   const handleReset = () => {
-    setMapCenter([39.8283, -98.5795]);
-    setMapZoom(4);
+    setMapCenter([20.5937, 78.9629]); // Center of India
+    setMapZoom(5);
     setSelectedLocation(null);
   };
 

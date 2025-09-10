@@ -1,10 +1,32 @@
 import axios from 'axios';
 import { WeatherData, GeologicalData, Alert, AlertType, AlertSeverity } from '../types/weather';
 
+// Indian states and major cities data
+const INDIAN_LOCATIONS = {
+  'Maharashtra': { region: 'Western India', cities: ['Mumbai', 'Pune', 'Nagpur', 'Nashik'] },
+  'Karnataka': { region: 'Southern India', cities: ['Bangalore', 'Mysore', 'Mangalore', 'Hubli'] },
+  'Tamil Nadu': { region: 'Southern India', cities: ['Chennai', 'Coimbatore', 'Madurai', 'Salem'] },
+  'Kerala': { region: 'Southern India', cities: ['Kochi', 'Thiruvananthapuram', 'Kozhikode', 'Thrissur'] },
+  'West Bengal': { region: 'Eastern India', cities: ['Kolkata', 'Siliguri', 'Durgapur', 'Asansol'] },
+  'Rajasthan': { region: 'Northern India', cities: ['Jaipur', 'Jodhpur', 'Udaipur', 'Kota'] },
+  'Gujarat': { region: 'Western India', cities: ['Ahmedabad', 'Surat', 'Vadodara', 'Rajkot'] },
+  'Uttar Pradesh': { region: 'Northern India', cities: ['Lucknow', 'Kanpur', 'Agra', 'Varanasi'] },
+  'Madhya Pradesh': { region: 'Central India', cities: ['Bhopal', 'Indore', 'Gwalior', 'Jabalpur'] },
+  'Himachal Pradesh': { region: 'Northern India', cities: ['Shimla', 'Manali', 'Dharamshala', 'Kullu'] },
+  'Uttarakhand': { region: 'Northern India', cities: ['Dehradun', 'Haridwar', 'Nainital', 'Rishikesh'] },
+  'Assam': { region: 'North-Eastern India', cities: ['Guwahati', 'Dibrugarh', 'Silchar', 'Tezpur'] }
+};
+
+// Monsoon and seasonal patterns for India
+const MONSOON_MONTHS = [6, 7, 8, 9]; // June to September
+const WINTER_MONTHS = [12, 1, 2]; // December to February
+const SUMMER_MONTHS = [3, 4, 5]; // March to May
+
 class WeatherService {
-  private readonly API_KEY = 'demo_key'; // In production, use environment variable
+  private readonly API_KEY = 'demo_key'; // In production, use IMD API key
   private readonly BASE_URL = 'https://api.openweathermap.org/data/2.5';
-  private readonly GEOLOGICAL_API = 'https://api.usgs.gov/earthquake/feed/v1.0';
+  private readonly IMD_API = 'https://mausam.imd.gov.in/api'; // Indian Meteorological Department
+  private readonly GSI_API = 'https://www.gsi.gov.in/api'; // Geological Survey of India
   
   private alertCache = new Map<string, Alert>();
   private dataCache = new Map<string, { data: any; timestamp: number }>();
@@ -19,8 +41,8 @@ class WeatherService {
     }
 
     try {
-      // Simulate API call with mock data for demo
-      const weatherData = this.generateMockWeatherData(lat, lng);
+      // Generate India-specific weather data
+      const weatherData = this.generateIndianWeatherData(lat, lng);
       
       this.dataCache.set(cacheKey, {
         data: weatherData,
@@ -43,8 +65,8 @@ class WeatherService {
     }
 
     try {
-      // Simulate geological data
-      const geologicalData = this.generateMockGeologicalData(lat, lng);
+      // Generate India-specific geological data
+      const geologicalData = this.generateIndianGeologicalData(lat, lng);
       
       this.dataCache.set(cacheKey, {
         data: geologicalData,
@@ -281,52 +303,225 @@ class WeatherService {
     };
   }
 
-  private generateMockWeatherData(lat: number, lng: number): WeatherData {
-    // Generate realistic weather data based on location
-    const baseTemp = 20 + Math.sin(lat * Math.PI / 180) * 15;
-    const precipitation = Math.random() * 30;
+  private generateIndianWeatherData(lat: number, lng: number): WeatherData {
+    const currentMonth = new Date().getMonth() + 1;
+    const { state, city, region } = this.getIndianLocationInfo(lat, lng);
+    
+    // India-specific temperature patterns
+    let baseTemp = 25; // Base temperature for India
+    let precipitation = 0;
+    let humidity = 60;
+    let condition = 'Clear';
+    let icon = '☀️';
+    
+    // Seasonal adjustments for India
+    if (MONSOON_MONTHS.includes(currentMonth)) {
+      // Monsoon season
+      precipitation = 15 + Math.random() * 85; // Heavy rainfall during monsoon
+      humidity = 75 + Math.random() * 20;
+      baseTemp = 26 + Math.random() * 8; // Moderate temperatures
+      condition = precipitation > 25 ? 'Heavy Rain' : precipitation > 10 ? 'Moderate Rain' : 'Light Rain';
+      icon = precipitation > 25 ? '🌧️' : precipitation > 10 ? '🌦️' : '🌤️';
+    } else if (SUMMER_MONTHS.includes(currentMonth)) {
+      // Summer season
+      precipitation = Math.random() * 5; // Very low rainfall
+      humidity = 40 + Math.random() * 25;
+      baseTemp = 35 + Math.random() * 12; // High temperatures (35-47°C)
+      condition = baseTemp > 42 ? 'Extreme Heat' : baseTemp > 38 ? 'Very Hot' : 'Hot';
+      icon = baseTemp > 42 ? '🔥' : '☀️';
+    } else if (WINTER_MONTHS.includes(currentMonth)) {
+      // Winter season
+      precipitation = Math.random() * 8; // Low rainfall
+      humidity = 50 + Math.random() * 30;
+      baseTemp = 15 + Math.random() * 15; // Cooler temperatures (15-30°C)
+      condition = baseTemp < 18 ? 'Cool' : 'Pleasant';
+      icon = baseTemp < 18 ? '🌤️' : '☀️';
+    } else {
+      // Pre-monsoon/Post-monsoon
+      precipitation = Math.random() * 15;
+      humidity = 55 + Math.random() * 25;
+      baseTemp = 28 + Math.random() * 10;
+      condition = precipitation > 5 ? 'Partly Cloudy' : 'Clear';
+      icon = precipitation > 5 ? '⛅' : '☀️';
+    }
+    
+    // Regional adjustments
+    if (lat > 30) {
+      // Northern India (Himalayas, Punjab, etc.)
+      baseTemp -= 5;
+      if (WINTER_MONTHS.includes(currentMonth)) {
+        baseTemp -= 8; // Much colder winters in north
+      }
+    } else if (lat < 15) {
+      // Southern India (Tamil Nadu, Kerala, etc.)
+      baseTemp += 2;
+      humidity += 10; // More humid in south
+    }
+    
+    // Coastal adjustments
+    if (this.isCoastalArea(lat, lng)) {
+      humidity += 15;
+      baseTemp -= 2; // Coastal areas are slightly cooler
+    }
+    
+    // Hill station adjustments
+    if (this.isHillStation(lat, lng)) {
+      baseTemp -= 10;
+      precipitation += 5;
+      condition = 'Pleasant';
+      icon = '🌤️';
+    }
     
     return {
       location: {
-        city: 'Sample City',
-        region: 'Sample Region',
-        country: 'Sample Country',
+        city: city,
+        region: region,
+        country: 'India',
         coordinates: { lat, lng }
       },
       current: {
-        temperature: baseTemp + (Math.random() - 0.5) * 10,
-        humidity: 40 + Math.random() * 40,
-        pressure: 1000 + Math.random() * 50,
-        windSpeed: Math.random() * 40,
+        temperature: Math.round(baseTemp * 10) / 10,
+        humidity: Math.round(humidity),
+        pressure: 1008 + Math.random() * 20, // Typical for India
+        windSpeed: Math.random() * 25 + 5, // Indian wind patterns
         windDirection: Math.random() * 360,
-        precipitation: precipitation,
-        visibility: 10 - Math.random() * 5,
+        precipitation: Math.round(precipitation * 10) / 10,
+        visibility: MONSOON_MONTHS.includes(currentMonth) ? 3 + Math.random() * 7 : 8 + Math.random() * 7,
         uvIndex: Math.random() * 11,
-        condition: precipitation > 10 ? 'Rainy' : 'Clear',
-        icon: precipitation > 10 ? '🌧️' : '☀️'
+        condition: condition,
+        icon: icon
       },
       forecast: Array.from({ length: 5 }, (_, i) => ({
         date: new Date(Date.now() + i * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        high: baseTemp + Math.random() * 8,
+        high: baseTemp + Math.random() * 5,
         low: baseTemp - Math.random() * 8,
-        condition: Math.random() > 0.7 ? 'Rainy' : 'Clear',
-        precipitation: Math.random() * 20,
-        windSpeed: Math.random() * 25
+        condition: MONSOON_MONTHS.includes(currentMonth) && Math.random() > 0.4 ? 'Rainy' : condition,
+        precipitation: MONSOON_MONTHS.includes(currentMonth) ? Math.random() * 40 : Math.random() * 10,
+        windSpeed: Math.random() * 20 + 5
       })),
       lastUpdated: new Date().toISOString()
     };
   }
 
-  private generateMockGeologicalData(lat: number, lng: number): GeologicalData {
+  private generateIndianGeologicalData(lat: lng: number, lng: number): GeologicalData {
+    const { state, region } = this.getIndianLocationInfo(lat, lng);
+    const currentMonth = new Date().getMonth() + 1;
+    
+    let soilMoisture = 30;
+    let slopeAngle = 5;
+    let recentRainfall = 0;
+    let seismicActivity = 0.5;
+    let terrainStability = 85;
+    
+    // Monsoon impact on soil moisture and rainfall
+    if (MONSOON_MONTHS.includes(currentMonth)) {
+      soilMoisture = 60 + Math.random() * 35; // High during monsoon
+      recentRainfall = 50 + Math.random() * 150; // Heavy monsoon rainfall
+    } else {
+      soilMoisture = 20 + Math.random() * 40;
+      recentRainfall = Math.random() * 30;
+    }
+    
+    // Regional geological characteristics
+    if (this.isHimalayanRegion(lat, lng)) {
+      // Himalayan region - high landslide risk
+      slopeAngle = 25 + Math.random() * 20; // Steep slopes
+      seismicActivity = 1.5 + Math.random() * 2.5; // Higher seismic activity
+      terrainStability = 50 + Math.random() * 30; // Less stable terrain
+    } else if (this.isWesternGhats(lat, lng)) {
+      // Western Ghats - moderate landslide risk
+      slopeAngle = 15 + Math.random() * 15;
+      seismicActivity = 0.5 + Math.random() * 1.5;
+      terrainStability = 60 + Math.random() * 25;
+    } else if (this.isDeccanPlateau(lat, lng)) {
+      // Deccan Plateau - stable terrain
+      slopeAngle = 2 + Math.random() * 8;
+      seismicActivity = 0.2 + Math.random() * 0.8;
+      terrainStability = 75 + Math.random() * 20;
+    } else if (this.isGangticPlain(lat, lng)) {
+      // Gangetic Plains - very stable, flood-prone
+      slopeAngle = 0.5 + Math.random() * 3;
+      seismicActivity = 0.1 + Math.random() * 0.5;
+      terrainStability = 85 + Math.random() * 15;
+      soilMoisture += 15; // Higher moisture retention
+    }
+    
     return {
-      location: { lat, lng, region: 'Sample Region' },
-      soilMoisture: 30 + Math.random() * 50,
-      slopeAngle: Math.random() * 45,
-      recentRainfall: Math.random() * 100,
-      seismicActivity: Math.random() * 4,
-      terrainStability: 60 + Math.random() * 30,
+      location: { lat, lng, region: region },
+      soilMoisture: Math.round(soilMoisture),
+      slopeAngle: Math.round(slopeAngle * 10) / 10,
+      recentRainfall: Math.round(recentRainfall * 10) / 10,
+      seismicActivity: Math.round(seismicActivity * 10) / 10,
+      terrainStability: Math.round(terrainStability),
       lastUpdated: new Date().toISOString()
     };
+  }
+  
+  private getIndianLocationInfo(lat: number, lng: number): { state: string; city: string; region: string } {
+    // Determine Indian state and city based on coordinates
+    if (lat >= 28 && lat <= 37 && lng >= 74 && lng <= 80) {
+      return { state: 'Himachal Pradesh', city: 'Shimla', region: 'Northern India' };
+    } else if (lat >= 28 && lat <= 31 && lng >= 75 && lng <= 78) {
+      return { state: 'Rajasthan', city: 'Jaipur', region: 'Northern India' };
+    } else if (lat >= 18 && lat <= 20 && lng >= 72 && lng <= 75) {
+      return { state: 'Maharashtra', city: 'Mumbai', region: 'Western India' };
+    } else if (lat >= 12 && lat <= 16 && lng >= 74 && lng <= 78) {
+      return { state: 'Karnataka', city: 'Bangalore', region: 'Southern India' };
+    } else if (lat >= 8 && lat <= 12 && lng >= 76 && lng <= 78) {
+      return { state: 'Tamil Nadu', city: 'Chennai', region: 'Southern India' };
+    } else if (lat >= 8 && lat <= 12 && lng >= 74 && lng <= 77) {
+      return { state: 'Kerala', city: 'Kochi', region: 'Southern India' };
+    } else if (lat >= 22 && lat <= 27 && lng >= 87 && lng <= 89) {
+      return { state: 'West Bengal', city: 'Kolkata', region: 'Eastern India' };
+    } else if (lat >= 21 && lat <= 24 && lng >= 68 && lng <= 74) {
+      return { state: 'Gujarat', city: 'Ahmedabad', region: 'Western India' };
+    } else if (lat >= 24 && lat <= 28 && lng >= 77 && lng <= 84) {
+      return { state: 'Uttar Pradesh', city: 'Lucknow', region: 'Northern India' };
+    } else if (lat >= 21 && lat <= 26 && lng >= 74 && lng <= 82) {
+      return { state: 'Madhya Pradesh', city: 'Bhopal', region: 'Central India' };
+    } else if (lat >= 29 && lat <= 31 && lng >= 77 && lng <= 81) {
+      return { state: 'Uttarakhand', city: 'Dehradun', region: 'Northern India' };
+    } else if (lat >= 24 && lat <= 28 && lng >= 89 && lng <= 96) {
+      return { state: 'Assam', city: 'Guwahati', region: 'North-Eastern India' };
+    } else {
+      // Default fallback
+      return { state: 'Maharashtra', city: 'Mumbai', region: 'Western India' };
+    }
+  }
+  
+  private isCoastalArea(lat: number, lng: number): boolean {
+    // Check if location is near Indian coastline
+    return (
+      (lng <= 73 && lat >= 8 && lat <= 23) || // Western coast
+      (lng >= 79 && lat >= 8 && lat <= 20) || // Eastern coast
+      (lat <= 10) // Southern tip
+    );
+  }
+  
+  private isHillStation(lat: number, lng: number): boolean {
+    // Check if location is a hill station
+    return (
+      (lat >= 30 && lng >= 76 && lng <= 80) || // Himachal Pradesh hills
+      (lat >= 29 && lat <= 31 && lng >= 78 && lng <= 80) || // Uttarakhand hills
+      (lat >= 11 && lat <= 12 && lng >= 76 && lng <= 77) || // Nilgiri hills
+      (lat >= 15 && lat <= 16 && lng >= 73 && lng <= 74) // Western Ghats hills
+    );
+  }
+  
+  private isHimalayanRegion(lat: number, lng: number): boolean {
+    return lat >= 28 && lng >= 74 && lng <= 95;
+  }
+  
+  private isWesternGhats(lat: number, lng: number): boolean {
+    return lat >= 8 && lat <= 21 && lng >= 73 && lng <= 77;
+  }
+  
+  private isDeccanPlateau(lat: number, lng: number): boolean {
+    return lat >= 12 && lat <= 24 && lng >= 74 && lng <= 84;
+  }
+  
+  private isGangticPlain(lat: number, lng: number): boolean {
+    return lat >= 24 && lat <= 30 && lng >= 77 && lng <= 88;
   }
 
   getActiveAlerts(): Alert[] {
