@@ -403,7 +403,7 @@ class WeatherService {
     };
   }
 
-  private generateIndianGeologicalData(lat: lng: number, lng: number): GeologicalData {
+  private generateIndianGeologicalData(lat: number, lng: number): GeologicalData {
     const { state, region } = this.getIndianLocationInfo(lat, lng);
     const currentMonth = new Date().getMonth() + 1;
     
