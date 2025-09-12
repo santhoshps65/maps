@@ -23,6 +23,12 @@ function App() {
   const [mapZoom, setMapZoom] = useState(5);
   const [mapRef, setMapRef] = useState<L.Map | null>(null);
   const [showLayerControl, setShowLayerControl] = useState(false);
+  const [mapBounds, setMapBounds] = useState<{
+    north: number;
+    south: number;
+    east: number;
+    west: number;
+  } | undefined>(undefined);
   const [selectedLocation, setSelectedLocation] = useState<{
     lat: number;
     lng: number;
@@ -184,6 +190,29 @@ function App() {
     const map = useMap();
     React.useEffect(() => {
       setMapRef(map);
+      
+      // Update bounds when map moves
+      const updateBounds = () => {
+        const bounds = map.getBounds();
+        setMapBounds({
+          north: bounds.getNorth(),
+          south: bounds.getSouth(),
+          east: bounds.getEast(),
+          west: bounds.getWest()
+        });
+      };
+      
+      // Set initial bounds
+      updateBounds();
+      
+      // Listen for map move events
+      map.on('moveend', updateBounds);
+      map.on('zoomend', updateBounds);
+      
+      return () => {
+        map.off('moveend', updateBounds);
+        map.off('zoomend', updateBounds);
+      };
     }, [map]);
     return null;
   };
@@ -202,7 +231,7 @@ function App() {
             </h1>
           </div>
           <div className="max-w-xs">
-            <LocationSearch onLocationSelect={handleLocationSelect} />
+            <LocationSearch onLocationSelect={handleLocationSelect} mapBounds={mapBounds} />
           </div>
           <button
             onClick={() => setShowLayerControl(!showLayerControl)}

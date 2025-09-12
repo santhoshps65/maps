@@ -10,6 +10,12 @@ declare global {
 
 interface LocationSearchProps {
   onLocationSelect: (lat: number, lng: number, name: string) => void;
+  mapBounds?: {
+    north: number;
+    south: number;
+    east: number;
+    west: number;
+  };
 }
 
 interface SearchResult {
@@ -19,7 +25,7 @@ interface SearchResult {
   place_id: string;
 }
 
-export const LocationSearch: React.FC<LocationSearchProps> = ({ onLocationSelect }) => {
+export const LocationSearch: React.FC<LocationSearchProps> = ({ onLocationSelect, mapBounds }) => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -34,10 +40,18 @@ export const LocationSearch: React.FC<LocationSearchProps> = ({ onLocationSelect
 
     setIsLoading(true);
     try {
+      // Build search URL with bounds if available
+      let searchUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+        searchQuery
+      )}&limit=10&addressdetails=1&extratags=1&namedetails=1&accept-language=en`;
+      
+      // Add viewbox parameter to limit results to current map view
+      if (mapBounds) {
+        searchUrl += `&viewbox=${mapBounds.west},${mapBounds.north},${mapBounds.east},${mapBounds.south}&bounded=1`;
+      }
+      
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-          searchQuery
-        )}&limit=10&addressdetails=1&extratags=1&namedetails=1&accept-language=en`
+        searchUrl
       );
       
       if (!response.ok) {
